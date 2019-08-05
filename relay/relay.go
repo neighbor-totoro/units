@@ -2,6 +2,7 @@ package relay
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -146,9 +147,13 @@ func (r *relay) sendAndRecv(name string, msg *protocol.Message) (*protocol.Messa
 
 func dealMessage(usr interface{}, mw protocol.MessageWriter, msg *protocol.Message) {
 	r := usr.(*relay)
-	if msg.Name == "" {
+	switch {
+	case msg.Name == "":
 		switch m := msg.Msg.(type) {
 		case protocol.MessageArray:
+			{
+				fmt.Printf("Mesage: %v\n", m.M)
+			}
 			f, ok := dealRegister[m.M[0]]
 			if !ok {
 				log.Printf("Illegal Message: %v\n", m.M)
@@ -158,27 +163,30 @@ func dealMessage(usr interface{}, mw protocol.MessageWriter, msg *protocol.Messa
 		default:
 			log.Printf("Illegal Message Type: %T\n", m)
 		}
-		return
+	default:
+		v, ok := r.cs.Load(msg.Name)
+		if !ok {
+			return
+		}
+		uc := v.(*unitChannel)
+		ch := make(chan *protocol.Message)
+		uc.ch <- &Message{M: msg, Ch: ch}
+		select {
+		case m := <-ch:
+			mw.WriteMessage(m)
+		case <-time.After(uc.timeout):
+		}
+		close(ch)
 	}
-	v, ok := r.cs.Load(msg.Name)
-	if !ok {
-		return
-	}
-	uc := v.(*unitChannel)
-	ch := make(chan *protocol.Message)
-	uc.ch <- &Message{M: msg, Ch: ch}
-	select {
-	case m := <-ch:
-		mw.WriteMessage(m)
-	case <-time.After(uc.timeout):
-	}
-	close(ch)
 }
 
 // delRoom name
 func deal0(r *relay, args []string) {
 	if len(args) < 1 {
 		return
+	}
+	{
+		fmt.Printf("delRoom %s\n", args[0])
 	}
 	r.us.Delete(args[0])
 	r.cs.Delete(args[0])

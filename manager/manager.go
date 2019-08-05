@@ -2,6 +2,7 @@ package manager
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"log"
 	"net"
@@ -21,6 +22,8 @@ func init() {
 
 	dealRegister["rec"] = deal3
 	dealRegister["rent"] = deal4
+
+	dealRegister["list"] = deal5
 }
 
 func New(port int, ten tenant.Tenant, brk breaker.Breaker, timeout time.Duration) *manager {
@@ -67,13 +70,11 @@ func deal0(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 		mw.Write(name, err)
 		return
 	}
-	for i, j := 0, len(rs); i < j; i++ {
-		if num, err := mg.ten.RoomNumber(rs[i]); err == nil {
-			if conn, err := net.Dial("tcp", num); err == nil {
-				conn.SetWriteDeadline(time.Now().Add(mg.tm))
-				protocol.NewMessageWriter(bufio.NewWriter(conn)).Write(rs[i], protocol.DelRoom(name))
-				conn.Close()
-			}
+	for _, v := range rs {
+		if conn, err := net.Dial("tcp", v); err == nil {
+			conn.SetWriteDeadline(time.Now().Add(mg.tm))
+			protocol.NewMessageWriter(bufio.NewWriter(conn)).Write("", protocol.DelRoom(args[0]))
+			conn.Close()
 		}
 	}
 	mw.Write(name, int64(0))
@@ -100,20 +101,18 @@ func deal2(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 		mw.Write(name, err)
 		return
 	}
-	for i, j := 0, len(rs); i < j; i++ {
-		if num, err := mg.ten.RoomNumber(rs[i]); err == nil {
-			if conn, err := net.Dial("tcp", num); err == nil {
-				conn.SetWriteDeadline(time.Now().Add(mg.tm))
-				protocol.NewMessageWriter(bufio.NewWriter(conn)).Write(rs[i], protocol.DelRoom(name))
-				conn.Close()
-			}
+	for _, v := range rs {
+		if conn, err := net.Dial("tcp", v); err == nil {
+			conn.SetWriteDeadline(time.Now().Add(mg.tm))
+			protocol.NewMessageWriter(bufio.NewWriter(conn)).Write("", protocol.DelRoom(args[0]))
+			conn.Close()
 		}
 	}
 	mg.ten.AddRoom(args[0], args[1])
 	mw.Write(name, int64(0))
 }
 
-// recycle name roomer
+// recycle name renter
 func deal3(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 	if len(args) < 2 {
 		mw.Write(name, errors.New("wrong number of arguments for 'recycle'"))
@@ -123,7 +122,7 @@ func deal3(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 	mw.Write(name, int64(0))
 }
 
-// rent name roomer
+// rent name renter
 func deal4(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 	if len(args) < 2 {
 		mw.Write(name, errors.New("wrong number of arguments for 'rent'"))
@@ -135,4 +134,42 @@ func deal4(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 		return
 	}
 	mw.Write(name, num)
+}
+
+// list
+func deal5(mg *manager, name string, mw protocol.MessageWriter, args []string) {
+	rs, err := mg.ten.Rooms()
+	if err != nil {
+		mw.Write(name, err)
+		return
+	}
+	ns := []string{}
+	rts := [][]string{}
+	for _, v := range rs {
+		if n, err := mg.ten.RoomNumber(v); err != nil {
+			mw.Write(name, err)
+			return
+		} else {
+			ns = append(ns, n)
+		}
+		if rt, err := mg.ten.Renters(v); err != nil {
+			mw.Write(name, err)
+			return
+		} else {
+			rts = append(rts, rt)
+		}
+	}
+	rl := new(RoomList)
+	for i, j := 0, len(rs); i < j; i++ {
+		rl.Rooms = append(rl.Rooms, &Room{
+			Name:    rs[i],
+			Number:  ns[i],
+			Renters: rts[i],
+		})
+	}
+	if data, err := json.Marshal(rl); err != nil {
+		mw.Write(name, err)
+	} else {
+		mw.Write(name, string(data))
+	}
 }

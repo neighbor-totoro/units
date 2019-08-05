@@ -31,6 +31,7 @@ func init() {
 	dealRegister["delRoom"] = deal3
 	dealRegister["addRoom"] = deal4
 	dealRegister["chgRoom"] = deal5
+	dealRegister["list"] = deal6
 
 	dealRegister["exit"] = deal99
 }
@@ -79,6 +80,7 @@ func run(r *textproto.Reader, w *bufio.Writer) {
 func deal0(w *textproto.Writer, args []string) {
 	w.PrintfLine("\thelp")
 	w.PrintfLine("\texit")
+	w.PrintfLine("\tlist")
 	w.PrintfLine("\tconnect [manager' address]")
 	w.PrintfLine("\tdisconnect")
 	w.PrintfLine("\tdelRoom [room's name]")
@@ -173,6 +175,25 @@ func deal5(w *textproto.Writer, args []string) {
 		return
 	}
 	msg, err := u.SendAndRecv("", protocol.ChgRoom(args[0], args[1]))
+	if err != nil {
+		w.PrintfLine(err.Error())
+		return
+	}
+	switch m := msg.Msg.(type) {
+	case protocol.MessageError:
+		w.PrintfLine(m.M)
+	case protocol.MessageSlice:
+		w.PrintfLine(m.M)
+	case protocol.MessageInteger:
+		w.PrintfLine(fmt.Sprintf("%d", m.M))
+	default:
+		w.PrintfLine("server error")
+	}
+}
+
+// list
+func deal6(w *textproto.Writer, args []string) {
+	msg, err := u.SendAndRecv("", protocol.List())
 	if err != nil {
 		w.PrintfLine(err.Error())
 		return

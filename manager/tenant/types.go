@@ -7,5 +7,9 @@ type Tenant interface {
 	Recycle(string, string) error
 	Rent(string, string) (string, error)
 
+	Rooms() ([]string, error)
+	Renters(string) ([]string, error)
+	RenterRooms(string) ([]string, error)
+
 	RoomNumber(string) (string, error)
 }

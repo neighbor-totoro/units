@@ -12,6 +12,16 @@ type Manager interface {
 	Stop()
 }
 
+type Room struct {
+	Name    string   `json: "name"`
+	Number  string   `json: "number"`
+	Renters []string `json: renters`
+}
+
+type RoomList struct {
+	Rooms []*Room
+}
+
 type manager struct {
 	tm  time.Duration
 	ten tenant.Tenant
