@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/nnsgmsone/units/breaker"
+	"github.com/nnsgmsone/units/example/kvstore/entry/kventry"
 	"github.com/nnsgmsone/units/relay"
-	"github.com/nnsgmsone/units/unit/kventry"
 )
 
 func main() {

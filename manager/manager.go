@@ -73,11 +73,11 @@ func deal0(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 	for _, v := range rs {
 		if conn, err := net.Dial("tcp", v); err == nil {
 			conn.SetWriteDeadline(time.Now().Add(mg.tm))
-			protocol.NewMessageWriter(bufio.NewWriter(conn)).Write("", protocol.DelRoom(args[0]))
+			protocol.NewMessageWriter(bufio.NewWriter(conn)).Write("", DelRoom(args[0]))
 			conn.Close()
 		}
 	}
-	mw.Write(name, int64(0))
+	mw.Write(name, []string{"ok"})
 }
 
 // addRoom name number
@@ -87,7 +87,7 @@ func deal1(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 		return
 	}
 	mg.ten.AddRoom(args[0], args[1])
-	mw.Write(name, int64(0))
+	mw.Write(name, []string{"ok"})
 }
 
 // chgRoom name number
@@ -104,12 +104,12 @@ func deal2(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 	for _, v := range rs {
 		if conn, err := net.Dial("tcp", v); err == nil {
 			conn.SetWriteDeadline(time.Now().Add(mg.tm))
-			protocol.NewMessageWriter(bufio.NewWriter(conn)).Write("", protocol.DelRoom(args[0]))
+			protocol.NewMessageWriter(bufio.NewWriter(conn)).Write("", DelRoom(args[0]))
 			conn.Close()
 		}
 	}
 	mg.ten.AddRoom(args[0], args[1])
-	mw.Write(name, int64(0))
+	mw.Write(name, []string{"ok"})
 }
 
 // recycle name renter
@@ -119,7 +119,7 @@ func deal3(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 		return
 	}
 	mg.ten.Recycle(args[0], args[1])
-	mw.Write(name, int64(0))
+	mw.Write(name, []string{"ok"})
 }
 
 // rent name renter
@@ -133,7 +133,7 @@ func deal4(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 		mw.Write(name, err)
 		return
 	}
-	mw.Write(name, num)
+	mw.Write(name, []string{num})
 }
 
 // list
@@ -170,6 +170,36 @@ func deal5(mg *manager, name string, mw protocol.MessageWriter, args []string) {
 	if data, err := json.Marshal(rl); err != nil {
 		mw.Write(name, err)
 	} else {
-		mw.Write(name, string(data))
+		mw.Write(name, []string{string(data)})
 	}
+}
+
+// List
+func List() []string {
+	return []string{"list"}
+}
+
+// delroom name
+func DelRoom(name string) []string {
+	return []string{"delRoom", name}
+}
+
+// addroom name address
+func AddRoom(name, address string) []string {
+	return []string{"addRoom", name, address}
+}
+
+// chgroom name address
+func ChgRoom(name, address string) []string {
+	return []string{"chgRoom", name, address}
+}
+
+// rent name user
+func Rent(name, user string) []string {
+	return []string{"rent", name, user}
+}
+
+// rec name user
+func Rec(name, user string) []string {
+	return []string{"rec", name, user}
 }

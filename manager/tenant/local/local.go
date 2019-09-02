@@ -1,8 +1,8 @@
 package local
 
 import (
+	"github.com/infinivision/common/miscellaneous"
 	"github.com/infinivision/store"
-	"github.com/nnsgmsone/GaeaDB/miscellaneous"
 )
 
 var rooms = []byte("tenant")
@@ -55,7 +55,7 @@ func (t *tenant) DelRoom(name string) ([]string, error) {
 	switch {
 	case err != nil:
 		return nil, err
-	case n == 1:
+	case n == 0:
 		if ks, _, err = tx.Mkvs([]byte(num)); err != nil {
 			return nil, err
 		}

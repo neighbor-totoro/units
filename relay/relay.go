@@ -9,6 +9,7 @@ import (
 
 	"github.com/nnsgmsone/protocol"
 	"github.com/nnsgmsone/units/breaker"
+	"github.com/nnsgmsone/units/manager"
 	"github.com/nnsgmsone/units/unit"
 )
 
@@ -88,7 +89,7 @@ func (r *relay) send(name string, msg *protocol.Message) error {
 	u, ok := r.us.Load(name)
 	if !ok {
 		if err := r.relayManager.getUnit(name, r); err != nil {
-			return err
+			return fmt.Errorf("Cannot Rent %s: %v", name, err)
 		}
 		if u, ok = r.us.Load(name); !ok {
 			return errors.New("Positioning Failed")
@@ -97,10 +98,6 @@ func (r *relay) send(name string, msg *protocol.Message) error {
 	var err error
 	switch m := msg.Msg.(type) {
 	case protocol.MessageError:
-		err = u.(unit.Unit).Send(name, m.M)
-	case protocol.MessageSlice:
-		err = u.(unit.Unit).Send(name, m.M)
-	case protocol.MessageInteger:
 		err = u.(unit.Unit).Send(name, m.M)
 	case protocol.MessageArray:
 		err = u.(unit.Unit).Send(name, m.M)
@@ -118,7 +115,7 @@ func (r *relay) sendAndRecv(name string, msg *protocol.Message) (*protocol.Messa
 	u, ok := r.us.Load(name)
 	if !ok {
 		if err := r.relayManager.getUnit(name, r); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Cannot Rent %s: %v", name, err)
 		}
 		if u, ok = r.us.Load(name); !ok {
 			return nil, errors.New("Positioning Failed")
@@ -128,10 +125,6 @@ func (r *relay) sendAndRecv(name string, msg *protocol.Message) (*protocol.Messa
 	var resp *protocol.Message
 	switch m := msg.Msg.(type) {
 	case protocol.MessageError:
-		resp, err = u.(unit.Unit).SendAndRecv(name, m.M)
-	case protocol.MessageSlice:
-		resp, err = u.(unit.Unit).SendAndRecv(name, m.M)
-	case protocol.MessageInteger:
 		resp, err = u.(unit.Unit).SendAndRecv(name, m.M)
 	case protocol.MessageArray:
 		resp, err = u.(unit.Unit).SendAndRecv(name, m.M)
@@ -209,16 +202,16 @@ func (rm *relayManager) getUnit(name string, r *relay) error {
 	var err error
 	var msg *protocol.Message
 
-	if msg, err = rm.u.SendAndRecv("", protocol.Rent(name, r.addr)); err != nil {
+	if msg, err = rm.u.SendAndRecv("", manager.Rent(name, r.addr)); err != nil {
 		rm.retry()
-		msg, err = rm.u.SendAndRecv("", protocol.Rent(name, r.addr))
+		msg, err = rm.u.SendAndRecv("", manager.Rent(name, r.addr))
 	}
 	if err != nil {
 		return err
 	}
 	switch m := msg.Msg.(type) {
-	case protocol.MessageSlice:
-		r.us.Store(name, unit.New(m.M, rm.timeout))
+	case protocol.MessageArray:
+		r.us.Store(name, unit.New(m.M[0], rm.timeout))
 		return nil
 	case protocol.MessageError:
 		return errors.New(m.M)

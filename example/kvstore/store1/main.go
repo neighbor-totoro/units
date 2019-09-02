@@ -9,8 +9,8 @@ import (
 
 	"github.com/infinivision/store/bg"
 	"github.com/nnsgmsone/units/breaker"
+	"github.com/nnsgmsone/units/example/kvstore/store1/kvstore"
 	"github.com/nnsgmsone/units/relay"
-	"github.com/nnsgmsone/units/unit/kvstore"
 )
 
 func main() {

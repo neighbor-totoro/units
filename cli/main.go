@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/nnsgmsone/protocol"
+	"github.com/nnsgmsone/units/manager"
 	"github.com/nnsgmsone/units/unit"
 )
 
@@ -120,7 +121,7 @@ func deal3(w *textproto.Writer, args []string) {
 		w.PrintfLine("Please Connect First")
 		return
 	}
-	msg, err := u.SendAndRecv("", protocol.DelRoom(args[0]))
+	msg, err := u.SendAndRecv("", manager.DelRoom(args[0]))
 	if err != nil {
 		w.PrintfLine(err.Error())
 		return
@@ -128,10 +129,8 @@ func deal3(w *textproto.Writer, args []string) {
 	switch m := msg.Msg.(type) {
 	case protocol.MessageError:
 		w.PrintfLine(m.M)
-	case protocol.MessageSlice:
-		w.PrintfLine(m.M)
-	case protocol.MessageInteger:
-		w.PrintfLine(fmt.Sprintf("%d", m.M))
+	case protocol.MessageArray:
+		w.PrintfLine(m.M[0])
 	default:
 		w.PrintfLine("server error")
 	}
@@ -147,7 +146,7 @@ func deal4(w *textproto.Writer, args []string) {
 		w.PrintfLine("Please Connect First")
 		return
 	}
-	msg, err := u.SendAndRecv("", protocol.AddRoom(args[0], args[1]))
+	msg, err := u.SendAndRecv("", manager.AddRoom(args[0], args[1]))
 	if err != nil {
 		w.PrintfLine(err.Error())
 		return
@@ -155,10 +154,8 @@ func deal4(w *textproto.Writer, args []string) {
 	switch m := msg.Msg.(type) {
 	case protocol.MessageError:
 		w.PrintfLine(m.M)
-	case protocol.MessageSlice:
-		w.PrintfLine(m.M)
-	case protocol.MessageInteger:
-		w.PrintfLine(fmt.Sprintf("%d", m.M))
+	case protocol.MessageArray:
+		w.PrintfLine(m.M[0])
 	default:
 		w.PrintfLine("server error")
 	}
@@ -174,7 +171,7 @@ func deal5(w *textproto.Writer, args []string) {
 		w.PrintfLine("Please Connect First")
 		return
 	}
-	msg, err := u.SendAndRecv("", protocol.ChgRoom(args[0], args[1]))
+	msg, err := u.SendAndRecv("", manager.ChgRoom(args[0], args[1]))
 	if err != nil {
 		w.PrintfLine(err.Error())
 		return
@@ -182,10 +179,8 @@ func deal5(w *textproto.Writer, args []string) {
 	switch m := msg.Msg.(type) {
 	case protocol.MessageError:
 		w.PrintfLine(m.M)
-	case protocol.MessageSlice:
-		w.PrintfLine(m.M)
-	case protocol.MessageInteger:
-		w.PrintfLine(fmt.Sprintf("%d", m.M))
+	case protocol.MessageArray:
+		w.PrintfLine(m.M[0])
 	default:
 		w.PrintfLine("server error")
 	}
@@ -193,7 +188,11 @@ func deal5(w *textproto.Writer, args []string) {
 
 // list
 func deal6(w *textproto.Writer, args []string) {
-	msg, err := u.SendAndRecv("", protocol.List())
+	if u == nil {
+		w.PrintfLine("Please Connect First")
+		return
+	}
+	msg, err := u.SendAndRecv("", manager.List())
 	if err != nil {
 		w.PrintfLine(err.Error())
 		return
@@ -201,10 +200,8 @@ func deal6(w *textproto.Writer, args []string) {
 	switch m := msg.Msg.(type) {
 	case protocol.MessageError:
 		w.PrintfLine(m.M)
-	case protocol.MessageSlice:
-		w.PrintfLine(m.M)
-	case protocol.MessageInteger:
-		w.PrintfLine(fmt.Sprintf("%d", m.M))
+	case protocol.MessageArray:
+		w.PrintfLine(m.M[0])
 	default:
 		w.PrintfLine("server error")
 	}
