@@ -5,11 +5,6 @@ import (
 	"github.com/nnsgmsone/units/relay"
 )
 
-type KvStore interface {
-	Run()
-	Stop()
-}
-
 type kvstore struct {
 	db  store.Store
 	ry  relay.Relay

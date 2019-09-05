@@ -8,11 +8,6 @@ const (
 	S2        // get
 )
 
-type KvEntry interface {
-	Run()
-	Stop()
-}
-
 type HttpResult struct {
 	Err string `json: "err"`
 	Msg string `json: "msg"`

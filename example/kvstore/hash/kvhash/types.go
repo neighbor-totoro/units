@@ -4,11 +4,6 @@ import (
 	"github.com/nnsgmsone/units/relay"
 )
 
-type KvHash interface {
-	Run()
-	Stop()
-}
-
 type kvhash struct {
 	rg  []string // region
 	ry  relay.Relay

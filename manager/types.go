@@ -7,11 +7,6 @@ import (
 	"github.com/nnsgmsone/units/manager/tenant"
 )
 
-type Manager interface {
-	Run()
-	Stop()
-}
-
 type Room struct {
 	Name    string   `json: "name"`
 	Number  string   `json: "number"`
